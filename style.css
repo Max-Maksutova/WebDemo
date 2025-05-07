@@ -1,3 +1,4 @@
+/* style.css */
 body {
   font-family: 'Segoe UI', sans-serif;
   background: #f9fafb;
@@ -41,6 +42,8 @@ header {
   border: 1px solid #d1d5db;
   border-radius: 8px;
   background: white;
+  min-width: 150px;
+  max-width: 300px;
 }
 
 .tags {
@@ -91,4 +94,32 @@ header {
   padding: 4px 8px;
   font-size: 0.75rem;
   border-radius: 6px;
+}
+
+.summary {
+  max-height: 6em;
+  overflow: hidden;
+  position: relative;
+  line-height: 1.5em;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  transition: max-height 0.3s ease;
+  cursor: pointer;
+}
+
+.summary.expanded {
+  max-height: none;
+  -webkit-line-clamp: unset;
+}
+
+.summary::after {
+  content: "▼ Show more";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: white;
+  color: #2563eb;
+  font-size: 0.85em;
+  padding-left: 0.5em;
 }
