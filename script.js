@@ -3,32 +3,15 @@ async function loadCSVasDataFrame(url, reportType) {
   const res = await fetch(url);
   const text = await res.text();
 
-  const lines = text.split(/\r?\n/);
-  const headers = lines[0].split(',');
-  const rows = [];
+  const parsed = Papa.parse(text, {
+    header: true,
+    skipEmptyLines: true
+  });
 
-  for (let i = 1; i < lines.length; i++) {
-    const row = lines[i];
-    if (!row.trim()) continue;
-    const values = [];
-    let inQuotes = false;
-    let value = '';
-    for (let j = 0; j < row.length; j++) {
-      const char = row[j];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        values.push(value);
-        value = '';
-      } else {
-        value += char;
-      }
-    }
-    values.push(value);
-    const obj = Object.fromEntries(headers.map((h, idx) => [h.trim(), values[idx]?.trim() || ""]));
-    if (reportType) obj.reportType = reportType;
-    rows.push(obj);
-  }
+  const rows = parsed.data.map(row => {
+    if (reportType) row.reportType = reportType;
+    return row;
+  });
 
   return rows;
 }
