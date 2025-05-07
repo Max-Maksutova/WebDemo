@@ -114,7 +114,7 @@ header {
 }
 
 .summary::after {
-  content: "▼ Show more";
+  content: "\25BC Show more";
   position: absolute;
   bottom: 0;
   right: 0;
