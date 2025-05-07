@@ -4,28 +4,33 @@ async function loadCSV(url) {
   const rows = text.split("\n").filter(row => row.trim());
   const headers = rows[0].split(",");
   const data = rows.slice(1).map(row => {
-    const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // split on commas outside quotes
-    return Object.fromEntries(headers.map((h, i) => [h, values[i]]));
+    const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // handles commas inside quotes
+    return headers.map((h, i) => values[i] || "");
   });
   return { headers, data };
 }
 
-function renderTable(containerId, headers, data) {
-  const table = document.getElementById(containerId);
-  const thead = "<tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
-  const rows = data.map(row => 
-    "<tr>" + headers.map(h => `<td>${row[h] || ""}</td>`).join("") + "</tr>"
-  ).join("");
-  table.innerHTML = `<thead>${thead}</thead><tbody>${rows}</tbody>`;
-}
+function initDataTable(tableId, headers, data) {
+  $(`#${tableId}`).DataTable({
+    data: data,
+    columns: headers.map(h => ({ title: h })),
+    dom: 'Bfrtip',
+    buttons: ['csvHtml5'],
+    initComplete: function () {
+      this.api().columns().every(function () {
+        const column = this;
+        const select = $('<select><option value=""></option></select>')
+          .appendTo($(column.footer()).empty())
+          .on('change', function () {
+            const val = $.fn.dataTable.util.escapeRegex($(this).val());
+            column.search(val ? `^${val}$` : '', true, false).draw();
+          });
 
-function setupSearch(inputId, tableId, data, headers) {
-  document.getElementById(inputId).addEventListener("input", function () {
-    const query = this.value.toLowerCase();
-    const filtered = data.filter(row =>
-      headers.some(h => (row[h] || "").toLowerCase().includes(query))
-    );
-    renderTable(tableId, headers, filtered);
+        column.data().unique().sort().each(function (d) {
+          if (d) select.append(`<option value="${d}">${d}</option>`);
+        });
+      });
+    }
   });
 }
 
@@ -35,11 +40,8 @@ async function init() {
     loadCSV("data/sampled_financial_reports.csv"),
   ]);
 
-  renderTable("crsTable", crs.headers, crs.data);
-  setupSearch("crsSearch", "crsTable", crs.data, crs.headers);
-
-  renderTable("finTable", fin.headers, fin.data);
-  setupSearch("finSearch", "finTable", fin.data, fin.headers);
+  initDataTable("crsTable", crs.headers, crs.data);
+  initDataTable("finTable", fin.headers, fin.data);
 }
 
 init();
