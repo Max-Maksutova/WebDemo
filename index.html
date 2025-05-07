@@ -78,9 +78,21 @@
         const matchesSearch = !searchVal || row.title.toLowerCase().includes(searchVal) || row.summary.toLowerCase().includes(searchVal);
         const matchesType = activeTags.length === 0 || activeTags.includes(row.reportType);
         const matchesAgency = row.reportType !== "CRS" ? (selectedAgencies.length === 0 || selectedAgencies.includes(row.agency)) : true;
-        const matchesTopic = row.reportType === "CRS" ? (selectedTopics.length === 0 || row.topics.some(t => selectedTopics.includes(t))) : true;
+
+        const matchesCRSTopic = row.reportType === "CRS"
+          ? (selectedTopics.length === 0 || row.topics.some(t => selectedTopics.includes(t)))
+          : true;
+
+        const matchesFinRelevance = row.reportType !== "CRS"
+          ? (selectedTopics.length === 0 || selectedTopics.some(topic => {
+              const lowerTopic = topic.toLowerCase();
+              return row.title.toLowerCase().includes(lowerTopic) || row.agency.toLowerCase().includes(lowerTopic);
+            }))
+          : true;
+
         const matchesYear = !year || year === "__any__" || row.date.startsWith(year);
-        return matchesSearch && matchesType && matchesAgency && matchesTopic && matchesYear;
+
+        return matchesSearch && matchesType && matchesAgency && matchesCRSTopic && matchesFinRelevance && matchesYear;
       });
 
       const container = document.getElementById("reportList");
@@ -172,20 +184,17 @@
         pdf_url: row.pdf_url || "",
         web_url: row.web_url || ""
       })),
-    ...finRaw
-      .filter(row => row["Report Name"] && row["Agency"] && row["Year"] && row["Report Type"])
-      .map(row => ({
-        title: row["Report Name"],
+      ...finRaw.map(row => ({
+        title: row["Report Name"] || "Untitled",
         summary: "",
-        agency: row["Agency"],
+        agency: row["Agency"] || "Unknown",
         topicDisplay: "",
         topics: [],
-        date: row["Year"],
-        reportType: row["Report Type"],
+        date: row["Year"] || "",
+        reportType: row["Report Type"] || "Unknown",
         pdf_url: row["Report PDF Link"] || "",
         web_url: row["Reporting Hosting Web Page"] || ""
-      }))
-
+      }))];
 
       const agencyOptions = extractUnique(finRaw, "Agency");
       const topicOptions = extractUnique(crsRaw, "topics", ",");
