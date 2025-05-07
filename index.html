@@ -20,7 +20,13 @@
       
       <select id="agencyFilter" multiple></select>
       <select id="topicFilter" multiple></select>
-      <select id="yearFilter"></select>
+      
+      <div class="year-range">
+        <label for="startYear">From:</label>
+        <select id="startYear"></select>
+        <label for="endYear">To:</label>
+        <select id="endYear"></select>
+      </div>
       
       <button class="clear-button" onclick="clearAllFilters()">
         <i class="fas fa-times-circle"></i> Clear Filters
@@ -69,6 +75,42 @@
       });
     }
 
+    function renderYearOptions(years) {
+      const startYearSelect = document.getElementById("startYear");
+      const endYearSelect = document.getElementById("endYear");
+      
+      // Clear existing options
+      startYearSelect.innerHTML = "";
+      endYearSelect.innerHTML = "";
+      
+      // Add "Any" option
+      const anyOptionStart = document.createElement("option");
+      anyOptionStart.value = "__any__";
+      anyOptionStart.textContent = "Any";
+      startYearSelect.appendChild(anyOptionStart);
+      
+      const anyOptionEnd = document.createElement("option");
+      anyOptionEnd.value = "__any__";
+      anyOptionEnd.textContent = "Any";
+      endYearSelect.appendChild(anyOptionEnd);
+      
+      // Sort years in descending order (newest first)
+      const sortedYears = [...years].sort((a, b) => b - a);
+      
+      // Add year options
+      sortedYears.forEach(year => {
+        const optionStart = document.createElement("option");
+        optionStart.value = year;
+        optionStart.textContent = year;
+        startYearSelect.appendChild(optionStart);
+        
+        const optionEnd = document.createElement("option");
+        optionEnd.value = year;
+        optionEnd.textContent = year;
+        endYearSelect.appendChild(optionEnd);
+      });
+    }
+
     let reportData = [];
 
     function getSelectedValues(select) {
@@ -80,7 +122,8 @@
       const searchVal = document.getElementById("searchInput").value.toLowerCase();
       const selectedAgencies = getSelectedValues(document.getElementById("agencyFilter"));
       const selectedTopics = getSelectedValues(document.getElementById("topicFilter"));
-      const year = document.getElementById("yearFilter").value;
+      const startYear = document.getElementById("startYear").value;
+      const endYear = document.getElementById("endYear").value;
       const activeTags = [...document.querySelectorAll(".tag.active")].map(t => t.textContent);
 
       const filtered = reportData.filter(row => {
@@ -99,16 +142,30 @@
             }))
           : true;
 
-        const matchesYear = !year || year === "__any__" || row.date.startsWith(year);
+        // Extract year from date
+        const reportYear = row.date ? parseInt(row.date.split("-")[0]) : null;
+        
+        // Check if year is within range
+        const matchesYearRange = (
+          (!reportYear) || 
+          (startYear === "__any__" && endYear === "__any__") ||
+          (startYear === "__any__" && reportYear <= parseInt(endYear)) ||
+          (endYear === "__any__" && reportYear >= parseInt(startYear)) ||
+          (reportYear >= parseInt(startYear) && reportYear <= parseInt(endYear))
+        );
 
-        return matchesSearch && matchesType && matchesAgency && matchesCRSTopic && matchesFinRelevance && matchesYear;
+        return matchesSearch && matchesType && matchesAgency && 
+               matchesCRSTopic && matchesFinRelevance && matchesYearRange;
       });
 
       const container = document.getElementById("reportList");
       container.innerHTML = "";
 
+      // Display count of filtered reports
+      container.innerHTML = `<p class="result-count">${filtered.length} reports found</p>`;
+
       if (filtered.length === 0) {
-        container.innerHTML = `
+        container.innerHTML += `
           <div class="no-results">
             <i class="fas fa-search fa-3x"></i>
             <h3>No matching reports found</h3>
@@ -140,7 +197,7 @@
         card.innerHTML = `
           ${badge}
           <h3>${row.title}</h3>
-          <p class="summary">${row.summary}</p>
+          <p class="summary">${row.summary || "No summary available."}</p>
           <p><strong><i class="${row.reportType === "CRS" ? "fas fa-tag" : "fas fa-building"}"></i> ${row.reportType === "CRS" ? row.topics.join(", ") : row.agency}</strong></p>
           <p><i class="far fa-calendar-alt"></i> ${row.date}</p>
           ${links}
@@ -171,7 +228,8 @@
       document.getElementById("searchInput").value = "";
       document.getElementById("agencyFilter").selectedIndex = 0;
       document.getElementById("topicFilter").selectedIndex = 0;
-      document.getElementById("yearFilter").selectedIndex = 0;
+      document.getElementById("startYear").selectedIndex = 0;
+      document.getElementById("endYear").selectedIndex = 0;
       document.querySelectorAll(".tag.active").forEach(tag => tag.classList.remove("active"));
       renderReports();
     }
@@ -205,6 +263,14 @@
 
     async function init() {
       try {
+        // Show loading indicator
+        document.getElementById("reportList").innerHTML = `
+          <div class="loading">
+            <i class="fas fa-spinner fa-spin fa-3x"></i>
+            <p>Loading reports data...</p>
+          </div>
+        `;
+        
         const crsRaw = await loadCSVasDataFrame("data/sampled_crs_list.csv", "CRS");
         const finRaw = await loadCSVasDataFrame("data/sampled_financial_reports.csv", "");
 
@@ -236,15 +302,23 @@
         renderMultiselect("agencyFilter", agencyOptions);
         renderMultiselect("topicFilter", topicOptions);
 
-        const years = [...new Set(reportData.map(r => r.date.split("-")[0]).filter(Boolean))].sort();
-        renderMultiselect("yearFilter", years);
+        // Extract years for the year range filters
+        const years = [...new Set(reportData
+          .map(r => r.date ? r.date.split("-")[0] : null)
+          .filter(Boolean)
+          .map(year => parseInt(year)))]
+          .sort((a, b) => a - b); // Sort numerically
+          
+        renderYearOptions(years);
 
         renderTags(["CRS", "AFR", "PAR", "CJ"]);
 
+        // Set up event listeners
         document.getElementById("searchInput").oninput = renderReports;
         document.getElementById("agencyFilter").onchange = renderReports;
         document.getElementById("topicFilter").onchange = renderReports;
-        document.getElementById("yearFilter").onchange = renderReports;
+        document.getElementById("startYear").onchange = renderReports;
+        document.getElementById("endYear").onchange = renderReports;
 
         renderReports();
       } catch (error) {
@@ -260,6 +334,7 @@
       }
     }
 
+    // Initialize the application
     init();
   </script>
 </body>
