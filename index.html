@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Government Reports</title>
-  <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
@@ -25,6 +25,151 @@
     <div id="reportList"></div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    async function loadCSVasDataFrame(url, reportType) {
+      const res = await fetch(url);
+      const text = await res.text();
+
+      const parsed = Papa.parse(text, {
+        header: true,
+        skipEmptyLines: true
+      });
+
+      const rows = parsed.data.map(row => {
+        if (reportType) row.reportType = reportType;
+        return row;
+      });
+
+      return rows;
+    }
+
+    function extractUnique(df, key, splitter = null) {
+      const all = df.flatMap(row => {
+        const value = row[key] || "";
+        return splitter ? value.split(splitter).map(v => v.trim()) : [value.trim()];
+      });
+      return [...new Set(all.filter(Boolean))].sort();
+    }
+
+    function renderMultiselect(id, values) {
+      const select = document.getElementById(id);
+      select.innerHTML = "";
+      values.forEach(v => {
+        const option = document.createElement("option");
+        option.value = v;
+        option.textContent = v;
+        select.appendChild(option);
+      });
+    }
+
+    let reportData = [];
+
+    function getSelectedValues(select) {
+      return [...select.selectedOptions].map(opt => opt.value);
+    }
+
+    function renderReports() {
+      const searchVal = document.getElementById("searchInput").value.toLowerCase();
+      const selectedAgencies = getSelectedValues(document.getElementById("agencyFilter"));
+      const selectedTopics = getSelectedValues(document.getElementById("topicFilter"));
+      const year = document.getElementById("yearFilter").value;
+      const activeTags = [...document.querySelectorAll(".tag.active")].map(t => t.textContent);
+
+      const filtered = reportData.filter(row => {
+        const matchesSearch = !searchVal || row.title.toLowerCase().includes(searchVal) || row.summary.toLowerCase().includes(searchVal);
+        const matchesType = activeTags.length === 0 || activeTags.includes(row.reportType);
+        const matchesAgency = row.reportType !== "CRS" ?
+          (selectedAgencies.length === 0 || selectedAgencies.includes(row.agency)) : true;
+        const matchesTopic = row.reportType === "CRS" ?
+          (selectedTopics.length === 0 || row.topics.some(t => selectedTopics.includes(t))) : true;
+        const matchesYear = !year || row.date.startsWith(year);
+        return matchesSearch && matchesType && matchesAgency && matchesTopic && matchesYear;
+      });
+
+      const container = document.getElementById("reportList");
+      container.innerHTML = "";
+
+      filtered.forEach(row => {
+        const card = document.createElement("div");
+        card.className = "report-card";
+        const pdfLink = row.pdf_url ? `<p><a href="${row.pdf_url}" target="_blank">PDF Report</a></p>` : "";
+        const webLink = row.web_url ? `<p><a href="${row.web_url}" target="_blank">Web Page</a></p>` : "";
+        card.innerHTML = `
+          <div class="badge">${row.reportType}</div>
+          <h3>${row.title}</h3>
+          <p class="summary">${row.summary}</p>
+          <p><strong>${row.reportType === "CRS" ? row.topicDisplay : row.agency}</strong></p>
+          <p>${row.date}</p>
+          ${pdfLink}
+          ${webLink}
+        `;
+        const summaryEl = card.querySelector(".summary");
+        summaryEl.addEventListener("click", () => summaryEl.classList.toggle("expanded"));
+        container.appendChild(card);
+      });
+    }
+
+    function renderTags(types) {
+      const tagContainer = document.getElementById("tagContainer");
+      tagContainer.innerHTML = "";
+      types.forEach(type => {
+        const span = document.createElement("span");
+        span.className = "tag";
+        span.textContent = type;
+        span.onclick = () => {
+          span.classList.toggle("active");
+          renderReports();
+        };
+        tagContainer.appendChild(span);
+      });
+    }
+
+    async function init() {
+      const crsRaw = await loadCSVasDataFrame("data/sampled_crs_list.csv", "CRS");
+      const finRaw = await loadCSVasDataFrame("data/sampled_financial_reports.csv", "");
+
+      reportData = [...crsRaw.map(row => ({
+        title: row.title || "Untitled",
+        summary: row.summary || "",
+        agency: "",
+        topicDisplay: (row.topics || "Misc").split(",")[0].trim(),
+        topics: (row.topics || "").split(",").map(s => s.trim()).filter(Boolean),
+        date: row.publishDate || "",
+        reportType: "CRS",
+        pdf_url: row.pdf_url || "",
+        web_url: row.web_url || ""
+      })),
+      ...finRaw.map(row => ({
+        title: row.title || "Untitled",
+        summary: row.summary || "",
+        agency: row.Agency || row.source || "Unknown",
+        topicDisplay: "",
+        topics: [],
+        date: row.date || row.Date || "",
+        reportType: row.reportType || "Unknown",
+        pdf_url: row.pdf_url || "",
+        web_url: row.web_url || ""
+      }))];
+
+      const agencyOptions = extractUnique(finRaw, "Agency");
+      const topicOptions = extractUnique(crsRaw, "topics", ",");
+      renderMultiselect("agencyFilter", agencyOptions);
+      renderMultiselect("topicFilter", topicOptions);
+
+      const years = [...new Set(reportData.map(r => r.date.split("-")[0]).filter(Boolean))].sort();
+      renderMultiselect("yearFilter", years);
+
+      renderTags(["CRS", "AFR", "PAR", "CJ"]);
+
+      document.getElementById("searchInput").oninput = renderReports;
+      document.getElementById("agencyFilter").onchange = renderReports;
+      document.getElementById("topicFilter").onchange = renderReports;
+      document.getElementById("yearFilter").onchange = renderReports;
+
+      renderReports();
+    }
+
+    init();
+  </script>
 </body>
 </html>
