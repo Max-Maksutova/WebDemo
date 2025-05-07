@@ -64,14 +64,16 @@ function renderReports() {
   filtered.forEach(row => {
     const card = document.createElement("div");
     card.className = "report-card";
-    const linkHtml = row.url ? `<p><a href="${row.url}" target="_blank">View Report</a></p>` : "";
+    const pdfLink = row.pdf_url ? `<p><a href="${row.pdf_url}" target="_blank">PDF Report</a></p>` : "";
+    const webLink = row.web_url ? `<p><a href="${row.web_url}" target="_blank">Web Page</a></p>` : "";
     card.innerHTML = `
       <div class="badge">${row.reportType}</div>
       <h3>${row.title}</h3>
       <p>${row.summary}</p>
       <p><strong>${row.reportType === "CRS" ? row.topic : row.agency}</strong></p>
       <p>${row.date}</p>
-      ${linkHtml}
+      ${pdfLink}
+      ${webLink}
     `;
     container.appendChild(card);
   });
@@ -88,9 +90,10 @@ async function init() {
       summary: row["summary"] || row["Summary"] || "",
       agency: isCRS ? "" : row["source"] || row["Agency"] || "Unknown",
       topic: isCRS ? (row["topics"] || row["Topic"] || "Misc").split(";")[0].trim() : "",
-      date: row["date"] || row["Date"] || "",
-      reportType: row["reportType"] || "Unknown",
-      url: row["url"] || row["URL"] || ""
+      date: row["publishDate"] || row["date"] || row["Date"] || "",
+      reportType: row["reportType"] || row["contentType"] || "Unknown",
+      pdf_url: row["pdf_url"] || "",
+      web_url: row["web_url"] || ""
     };
   });
 
