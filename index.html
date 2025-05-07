@@ -132,15 +132,12 @@
 
     function exportFilteredCSV() {
       const rows = document.querySelectorAll(".report-card");
-
       if (rows.length === 0) {
         alert("No reports to export.");
         return;
       }
-
       const headers = ["Title", "Summary", "Agency/Topic", "Date", "Report Type", "PDF URL", "Web URL"];
       const csvContent = [headers.join(",")];
-
       rows.forEach(card => {
         const title = card.querySelector("h3")?.textContent || "";
         const summary = card.querySelector(".summary")?.textContent.replace(/\n/g, " ").replace(/\"/g, "\"\"") || "";
@@ -149,10 +146,8 @@
         const type = card.querySelector(".badge")?.textContent || "";
         const pdf = card.querySelector("a[href*='.pdf']")?.href || "";
         const web = card.querySelector("a[href*='http']:not([href*='.pdf'])")?.href || "";
-
         csvContent.push(`"${title}","${summary}","${label}","${date}","${type}","${pdf}","${web}"`);
       });
-
       const blob = new Blob([csvContent.join("\n")], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
@@ -178,15 +173,15 @@
         web_url: row.web_url || ""
       })),
       ...finRaw.map(row => ({
-        title: row.title || "Untitled",
-        summary: row.summary || "",
-        agency: row.Agency || row.source || "Unknown",
+        title: row["Report Name"] || "Untitled",
+        summary: "",
+        agency: row["Agency"] || "Unknown",
         topicDisplay: "",
         topics: [],
-        date: row.date || row.Date || "",
-        reportType: row.reportType || "Unknown",
-        pdf_url: row.pdf_url || "",
-        web_url: row.web_url || ""
+        date: row["Year"] || "",
+        reportType: row["Report Type"] || "Unknown",
+        pdf_url: row["Report PDF Link"] || "",
+        web_url: row["Reporting Hosting Web Page"] || ""
       }))];
 
       const agencyOptions = extractUnique(finRaw, "Agency");
