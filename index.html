@@ -18,10 +18,11 @@
       <select id="agencyFilter" multiple></select>
       <select id="topicFilter" multiple></select>
       <select id="yearFilter"></select>
+      <button class="clear-button" onclick="clearAllFilters()">Clear All Filters</button>
+      <button class="export-button" onclick="exportFilteredCSV()">Download CSV</button>
     </div>
 
     <div class="tags" id="tagContainer"></div>
-
     <div id="reportList"></div>
   </div>
 
@@ -29,18 +30,11 @@
     async function loadCSVasDataFrame(url, reportType) {
       const res = await fetch(url);
       const text = await res.text();
-
-      const parsed = Papa.parse(text, {
-        header: true,
-        skipEmptyLines: true
-      });
-
-      const rows = parsed.data.map(row => {
+      const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+      return parsed.data.map(row => {
         if (reportType) row.reportType = reportType;
         return row;
       });
-
-      return rows;
     }
 
     function extractUnique(df, key, splitter = null) {
@@ -54,6 +48,10 @@
     function renderMultiselect(id, values) {
       const select = document.getElementById(id);
       select.innerHTML = "";
+      const anyOption = document.createElement("option");
+      anyOption.value = "__any__";
+      anyOption.textContent = "Any";
+      select.appendChild(anyOption);
       values.forEach(v => {
         const option = document.createElement("option");
         option.value = v;
@@ -65,7 +63,8 @@
     let reportData = [];
 
     function getSelectedValues(select) {
-      return [...select.selectedOptions].map(opt => opt.value);
+      const selected = [...select.selectedOptions].map(opt => opt.value);
+      return selected.includes("__any__") ? [] : selected;
     }
 
     function renderReports() {
@@ -78,11 +77,9 @@
       const filtered = reportData.filter(row => {
         const matchesSearch = !searchVal || row.title.toLowerCase().includes(searchVal) || row.summary.toLowerCase().includes(searchVal);
         const matchesType = activeTags.length === 0 || activeTags.includes(row.reportType);
-        const matchesAgency = row.reportType !== "CRS" ?
-          (selectedAgencies.length === 0 || selectedAgencies.includes(row.agency)) : true;
-        const matchesTopic = row.reportType === "CRS" ?
-          (selectedTopics.length === 0 || row.topics.some(t => selectedTopics.includes(t))) : true;
-        const matchesYear = !year || row.date.startsWith(year);
+        const matchesAgency = row.reportType !== "CRS" ? (selectedAgencies.length === 0 || selectedAgencies.includes(row.agency)) : true;
+        const matchesTopic = row.reportType === "CRS" ? (selectedTopics.length === 0 || row.topics.some(t => selectedTopics.includes(t))) : true;
+        const matchesYear = !year || year === "__any__" || row.date.startsWith(year);
         return matchesSearch && matchesType && matchesAgency && matchesTopic && matchesYear;
       });
 
@@ -122,6 +119,47 @@
         };
         tagContainer.appendChild(span);
       });
+    }
+
+    function clearAllFilters() {
+      document.getElementById("searchInput").value = "";
+      document.getElementById("agencyFilter").selectedIndex = 0;
+      document.getElementById("topicFilter").selectedIndex = 0;
+      document.getElementById("yearFilter").selectedIndex = 0;
+      document.querySelectorAll(".tag.active").forEach(tag => tag.classList.remove("active"));
+      renderReports();
+    }
+
+    function exportFilteredCSV() {
+      const rows = document.querySelectorAll(".report-card");
+
+      if (rows.length === 0) {
+        alert("No reports to export.");
+        return;
+      }
+
+      const headers = ["Title", "Summary", "Agency/Topic", "Date", "Report Type", "PDF URL", "Web URL"];
+      const csvContent = [headers.join(",")];
+
+      rows.forEach(card => {
+        const title = card.querySelector("h3")?.textContent || "";
+        const summary = card.querySelector(".summary")?.textContent.replace(/\n/g, " ").replace(/\"/g, "\"\"") || "";
+        const label = card.querySelector("strong")?.textContent || "";
+        const date = card.querySelector("p:nth-of-type(3)")?.textContent || "";
+        const type = card.querySelector(".badge")?.textContent || "";
+        const pdf = card.querySelector("a[href*='.pdf']")?.href || "";
+        const web = card.querySelector("a[href*='http']:not([href*='.pdf'])")?.href || "";
+
+        csvContent.push(`"${title}","${summary}","${label}","${date}","${type}","${pdf}","${web}"`);
+      });
+
+      const blob = new Blob([csvContent.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute("download", "filtered_reports.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     async function init() {
