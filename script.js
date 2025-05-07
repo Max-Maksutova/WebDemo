@@ -70,8 +70,10 @@ function renderReports() {
   const filtered = reportData.filter(row => {
     const matchesSearch = !searchVal || row.title.toLowerCase().includes(searchVal) || row.summary.toLowerCase().includes(searchVal);
     const matchesType = activeTags.length === 0 || activeTags.includes(row.reportType);
-    const matchesAgency = row.reportType !== "CRS" ? (selectedAgencies.length === 0 || selectedAgencies.includes(row.agency)) : true;
-    const matchesTopic = row.reportType === "CRS" ? (selectedTopics.length === 0 || row.topics.some(t => selectedTopics.includes(t))) : true;
+    const matchesAgency = row.reportType !== "CRS" ?
+      (selectedAgencies.length === 0 || selectedAgencies.some(a => row.agency === a)) : true;
+    const matchesTopic = row.reportType === "CRS" ?
+      (selectedTopics.length === 0 || row.topics.some(t => selectedTopics.includes(t))) : true;
     const matchesYear = !year || row.date.startsWith(year);
     return matchesSearch && matchesType && matchesAgency && matchesTopic && matchesYear;
   });
