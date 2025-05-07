@@ -46,6 +46,15 @@ header {
   max-width: 300px;
 }
 
+.filters select[multiple] option::before {
+  content: '\2713\0020'; /* checkmark */
+  visibility: hidden;
+}
+
+.filters select[multiple] option:checked::before {
+  visibility: visible;
+}
+
 .tags {
   margin-bottom: 1rem;
 }
