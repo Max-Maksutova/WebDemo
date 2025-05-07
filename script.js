@@ -64,12 +64,14 @@ function renderReports() {
   filtered.forEach(row => {
     const card = document.createElement("div");
     card.className = "report-card";
+    const linkHtml = row.url ? `<p><a href="${row.url}" target="_blank">View Report</a></p>` : "";
     card.innerHTML = `
       <div class="badge">${row.reportType}</div>
       <h3>${row.title}</h3>
       <p>${row.summary}</p>
       <p><strong>${row.reportType === "CRS" ? row.topic : row.agency}</strong></p>
       <p>${row.date}</p>
+      ${linkHtml}
     `;
     container.appendChild(card);
   });
@@ -87,7 +89,8 @@ async function init() {
       agency: isCRS ? "" : row["source"] || row["Agency"] || "Unknown",
       topic: isCRS ? (row["topics"] || row["Topic"] || "Misc").split(";")[0].trim() : "",
       date: row["date"] || row["Date"] || "",
-      reportType: row["reportType"] || "Unknown"
+      reportType: row["reportType"] || "Unknown",
+      url: row["url"] || row["URL"] || ""
     };
   });
 
