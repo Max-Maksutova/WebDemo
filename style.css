@@ -1,28 +1,82 @@
 body {
-  font-family: sans-serif;
-  padding: 20px;
-  background-color: #f4f4f4;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f9fafb;
+  margin: 0;
+  padding: 0;
 }
 
-input {
-  padding: 8px;
-  width: 50%;
-  margin: 10px 0;
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 2rem;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 40px;
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-th, td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: left;
-  background-color: #fff;
+.chat-button {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
 }
 
-h1, h2 {
-  color: #003366;
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.filters input,
+.filters select {
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+}
+
+.tags {
+  margin-bottom: 1rem;
+}
+
+.tag {
+  display: inline-block;
+  background: #e5e7eb;
+  color: #374151;
+  padding: 6px 12px;
+  margin: 4px 6px 4px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.tag.active {
+  background-color: #2563eb;
+  color: white;
+}
+
+.report-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.report-card h3 {
+  margin: 0 0 8px;
+  color: #111827;
+}
+
+.report-card p {
+  margin: 0 0 4px;
+  color: #4b5563;
 }
