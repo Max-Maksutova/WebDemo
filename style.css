@@ -57,6 +57,16 @@ header {
   cursor: pointer;
 }
 
+.export-button {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
 .filters select[multiple] option::before {
   content: '\2713\0020'; /* checkmark */
   visibility: hidden;
