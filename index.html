@@ -172,17 +172,20 @@
         pdf_url: row.pdf_url || "",
         web_url: row.web_url || ""
       })),
-      ...finRaw.map(row => ({
-        title: row["Report Name"] || "Untitled",
+    ...finRaw
+      .filter(row => row["Report Name"] && row["Agency"] && row["Year"] && row["Report Type"])
+      .map(row => ({
+        title: row["Report Name"],
         summary: "",
-        agency: row["Agency"] || "Unknown",
+        agency: row["Agency"],
         topicDisplay: "",
         topics: [],
-        date: row["Year"] || "",
-        reportType: row["Report Type"] || "Unknown",
+        date: row["Year"],
+        reportType: row["Report Type"],
         pdf_url: row["Report PDF Link"] || "",
         web_url: row["Reporting Hosting Web Page"] || ""
-      }))];
+      }))
+
 
       const agencyOptions = extractUnique(finRaw, "Agency");
       const topicOptions = extractUnique(crsRaw, "topics", ",");
