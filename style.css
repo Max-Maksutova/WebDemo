@@ -69,6 +69,7 @@ header {
   border-radius: 10px;
   padding: 16px;
   margin-bottom: 16px;
+  position: relative;
 }
 
 .report-card h3 {
@@ -79,4 +80,15 @@ header {
 .report-card p {
   margin: 0 0 4px;
   color: #4b5563;
+}
+
+.badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #2563eb;
+  color: white;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  border-radius: 6px;
 }
