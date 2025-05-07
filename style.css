@@ -42,7 +42,7 @@ body {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 2rem;
   background-color: rgba(255, 255, 255, 0.9);
@@ -66,6 +66,11 @@ header h1 {
   font-weight: 700;
   margin: 0;
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+header h1 i {
+  margin-right: 0.5rem;
+  color: var(--primary);
 }
 
 .chat-button {
@@ -105,7 +110,6 @@ header h1 {
   border-radius: var(--radius);
   background: white;
   min-width: 180px;
-  max-width: 300px;
   box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
 }
@@ -123,7 +127,33 @@ header h1 {
 
 #searchInput {
   flex-grow: 1;
-  min-width: 250px;
+  width: 100%;
+}
+
+/* Year range styling */
+.year-range {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: white;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.year-range label {
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  font-weight: 500;
+}
+
+.year-range select {
+  min-width: 100px;
+  padding: 0.5rem;
+  border: 1px solid var(--gray-200);
+  box-shadow: none;
+  margin: 0;
 }
 
 .button {
@@ -143,7 +173,16 @@ header h1 {
 .clear-button {
   background-color: var(--danger);
   color: white;
-  composes: button;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .clear-button:hover {
@@ -155,7 +194,16 @@ header h1 {
 .export-button {
   background-color: var(--success);
   color: white;
-  composes: button;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .export-button:hover {
@@ -234,11 +282,18 @@ header h1 {
   border-color: var(--primary-dark);
 }
 
-/* Report card styling */
+/* Report list styling - single column */
 #reportList {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.result-count {
+  font-size: 1rem;
+  color: var(--gray-600);
+  margin-bottom: 1rem;
+  font-weight: 500;
 }
 
 .report-card {
@@ -248,15 +303,13 @@ header h1 {
   padding: 1.5rem;
   position: relative;
   transition: all 0.3s ease;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  width: 100%;
   box-shadow: var(--shadow);
 }
 
 .report-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
   border-color: var(--gray-300);
 }
 
@@ -277,16 +330,34 @@ header h1 {
   color: var(--gray-800);
 }
 
-.report-card a {
-  color: var(--primary);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
+.report-card p i {
+  margin-right: 0.5rem;
+  opacity: 0.7;
 }
 
-.report-card a:hover {
-  color: var(--primary-dark);
-  text-decoration: underline;
+.card-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--gray-100);
+  color: var(--gray-800);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn:hover {
+  background-color: var(--gray-200);
+  color: var(--gray-900);
 }
 
 .badge {
@@ -301,6 +372,23 @@ header h1 {
   font-weight: 600;
   letter-spacing: 0.05em;
   box-shadow: var(--shadow-sm);
+}
+
+/* Badge colors for different report types */
+.badge.crs {
+  background-color: #4f46e5; /* indigo */
+}
+
+.badge.afr {
+  background-color: #0891b2; /* cyan */
+}
+
+.badge.par {
+  background-color: #7c3aed; /* violet */
+}
+
+.badge.cj {
+  background-color: #0ea5e9; /* sky */
 }
 
 .summary {
@@ -339,14 +427,57 @@ header h1 {
   content: "Show less";
 }
 
+/* Loading and error states */
+.loading, 
+.error,
+.no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  background-color: white;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow);
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.loading i,
+.error i,
+.no-results i {
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+.error i {
+  color: var(--danger);
+}
+
+.no-results i {
+  color: var(--gray-400);
+}
+
+.error-details {
+  font-family: monospace;
+  font-size: 0.875rem;
+  background-color: var(--gray-100);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  color: var(--gray-700);
+  margin-top: 1rem;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .container {
     padding: 1.5rem;
-  }
-  
-  #reportList {
-    grid-template-columns: 1fr;
+    margin: 1rem;
+    max-width: calc(100% - 2rem);
   }
   
   .filters {
@@ -355,8 +486,8 @@ header h1 {
   }
   
   .filters input,
-  .filters select {
-    max-width: 100%;
+  .filters select,
+  .year-range {
     width: 100%;
   }
   
@@ -368,5 +499,25 @@ header h1 {
   
   .chat-button {
     align-self: flex-end;
+  }
+  
+  .card-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .year-range {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+  
+  .year-range label {
+    margin-bottom: 0.25rem;
   }
 }
