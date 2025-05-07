@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Government Reports</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
@@ -13,13 +13,10 @@
     </header>
 
     <div class="filters">
-      <input type="text" id="searchInput" placeholder="Search reports..." />
-      <select id="agencyFilter">
-        <option value="">Topic/Agency</option>
-      </select>
-      <select id="yearFilter">
-        <option value="">Year</option>
-      </select>
+      <input type="text" id="searchInput" placeholder="Search reports...">
+      <select id="agencyFilter" multiple></select>
+      <select id="topicFilter" multiple></select>
+      <select id="yearFilter"></select>
     </div>
 
     <div class="tags" id="tagContainer"></div>
