@@ -7,7 +7,53 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
-  <!-- Botpress scripts will be loaded dynamically -->
+  
+  <!-- Botpress integration with obfuscation -->
+  <script>
+    // Self-executing function to limit scope
+    (function() {
+      // Simple obfuscation of the script URLs
+      const scripts = {
+        inject: atob('aHR0cHM6Ly9jZG4uYm90cHJlc3MuY2xvdWQvd2ViY2hhdC92Mi40L2luamVjdC5qcw=='), // Base64 encoded URL
+        config: atob('aHR0cHM6Ly9maWxlcy5icGNvbnRlbnQuY2xvdWQvMjAyNS8wNS8wOC8wMC8yMDI1MDUwODAwNDgyMC1VWElNSU9PMi5qcw==') // Base64 encoded URL
+      };
+      
+      // Function to load Botpress scripts
+      function loadBotpress() {
+        // Load inject script first
+        const injectScript = document.createElement('script');
+        injectScript.src = scripts.inject;
+        injectScript.onload = function() {
+          // Then load config script
+          const configScript = document.createElement('script');
+          configScript.src = scripts.config;
+          document.head.appendChild(configScript);
+        };
+        document.head.appendChild(injectScript);
+      }
+      
+      // Create a global function for toggling the chat
+      window.toggleBotpressChat = function() {
+        // Check if Botpress is loaded
+        if (window.botpressWebChat) {
+          window.botpressWebChat.sendEvent({ type: 'toggle' });
+        } else {
+          // If not loaded, load it now
+          loadBotpress();
+          
+          // Wait for it to initialize and then open it
+          const checkInterval = setInterval(function() {
+            if (window.botpressWebChat) {
+              setTimeout(function() {
+                window.botpressWebChat.sendEvent({ type: 'toggle' });
+                clearInterval(checkInterval);
+              }, 1000); // Wait a second after loading to toggle
+            }
+          }, 500);
+        }
+      };
+    })();
+  </script>
 </head>
 <body style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Flag_of_the_United_States.svg/1200px-Flag_of_the_United_States.svg.png'); background-size: cover; background-repeat: no-repeat; background-attachment: fixed; background-position: center; opacity: 0.97;">
   <div class="container" id="top">
@@ -82,89 +128,6 @@
   </button>
 
   <script>
-    // Create a separate file called botpress-config.js with the following content:
-    /*
-    // This loads the Botpress webchat scripts
-    function loadBotpressChat() {
-      // First, load the inject script
-      var injectScript = document.createElement('script');
-      injectScript.src = 'https://cdn.botpress.cloud/webchat/v2.4/inject.js';
-      injectScript.onload = function() {
-        // After inject script is loaded, load the config script
-        var configScript = document.createElement('script');
-        configScript.src = 'https://files.bpcontent.cloud/2025/05/08/00/20250508004820-UXIMIOO2.js';
-        document.head.appendChild(configScript);
-      };
-      document.head.appendChild(injectScript);
-    }
-
-    // Initialize Botpress - this should be defined here, but we'll check if it exists
-    function toggleBotpressChat() {
-      if (window.botpressWebChat) {
-        window.botpressWebChat.sendEvent({ type: 'toggle' });
-      } else {
-        // If Botpress isn't loaded yet, load it and open when ready
-        loadBotpressChat();
-        // Set a timeout to check for the webchat and open it when available
-        let attempts = 0;
-        const checkInterval = setInterval(function() {
-          if (window.botpressWebChat) {
-            window.botpressWebChat.sendEvent({ type: 'toggle' });
-            clearInterval(checkInterval);
-          } else if (attempts > 10) {
-            // Give up after 10 attempts (5 seconds)
-            clearInterval(checkInterval);
-            console.error('Could not load Botpress webchat');
-          }
-          attempts++;
-        }, 500);
-      }
-    }
-    */
-    
-    // Dynamically load the Botpress script on page load for authorized users
-    (function() {
-      // In a real implementation, you would check if the user is authorized
-      // For now, we'll just load it for demonstration purposes
-      const isAuthorized = true;
-      
-      if (isAuthorized) {
-        // Load Botpress scripts dynamically to prevent public access
-        const injectScript = document.createElement('script');
-        injectScript.src = 'https://cdn.botpress.cloud/webchat/v2.4/inject.js';
-        injectScript.onload = function() {
-          // After inject script is loaded, load the config script
-          const configScript = document.createElement('script');
-          configScript.src = 'https://files.bpcontent.cloud/2025/05/08/00/20250508004820-UXIMIOO2.js';
-          configScript.onload = function() {
-            // Automatically configure the webchat to stay hidden until toggled
-            if (window.botpressWebChat) {
-              window.botpressWebChat.onEvent(
-                function(event) {
-                  // Initialize with closed state
-                  if (event.type === 'WEBCHAT_READY') {
-                    window.botpressWebChat.sendEvent({ type: 'HIDE' });
-                  }
-                }
-              );
-            }
-          };
-          document.head.appendChild(configScript);
-        };
-        document.head.appendChild(injectScript);
-      }
-    })();
-    
-    // Function to toggle Botpress chat with auto-open on first click
-    function toggleBotpressChat() {
-      if (window.botpressWebChat) {
-        window.botpressWebChat.sendEvent({ type: 'toggle' });
-      } else {
-        // Display loading indicator or message
-        alert("Chat is initializing, please try again in a moment.");
-      }
-    }
-    
     // Function to ensure URLs are absolute with proper protocol
     function ensureAbsoluteURL(url) {
       if (!url) return '';
