@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Government Reports Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.botpress.cloud/webchat/v2.4/inject.js"></script>
+  <script src="https://files.bpcontent.cloud/2025/05/08/00/20250508004820-UXIMIOO2.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -12,7 +14,9 @@
   <div class="container" id="top">
     <header>
       <h1><i class="fas fa-landmark"></i> Government Reports Dashboard</h1>
-      <button class="chat-button"><i class="fas fa-comment-dots"></i> Chat with AI</button>
+      <button class="chat-button" onclick="toggleBotpressChat()">
+        <i class="fas fa-comment-dots"></i> Chat with AI
+      </button>
     </header>
 
     <div class="filters">
@@ -37,10 +41,43 @@
       </button>
     </div>
 
-    <div class="tags" id="tagContainer"></div>
+    <div class="tags-container">
+      <div class="tags" id="tagContainer"></div>
+      <button class="report-types-info" onclick="openModal()">
+        <i class="fas fa-info-circle"></i> Report Types Info
+      </button>
+    </div>
     <div id="reportList"></div>
   </div>
   
+    <!-- Add the modal for report types info -->
+    <div id="reportTypesModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Report Types Information</h2>
+          <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="report-type-item">
+            <h3><span class="badge crs">CRS</span> Congressional Research Service</h3>
+            <p>Reports created by the Congressional Research Service, a legislative branch agency within the Library of Congress. These reports provide detailed analysis and research on policy issues for members of Congress.</p>
+          </div>
+          <div class="report-type-item">
+            <h3><span class="badge afr">AFR</span> Agency Financial Report</h3>
+            <p>Annual reports that provide financial and performance results for federal agencies. AFRs demonstrate accountability and stewardship of public funds, including audited financial statements and compliance information.</p>
+          </div>
+          <div class="report-type-item">
+            <h3><span class="badge par">PAR</span> Performance and Accountability Report</h3>
+            <p>Annual reports that combine financial and performance information to show how agencies are meeting their goals and using taxpayer dollars effectively.</p>
+          </div>
+          <div class="report-type-item">
+            <h3><span class="badge cj">CJ</span> Congressional Justification</h3>
+            <p>Documents submitted to Congress that detail an agency's budget request. CJs explain how requested funds will be used, including program priorities and performance plans.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
   <button id="backToTopBtn" class="back-to-top" aria-label="Back to top">
     <i class="fas fa-arrow-up"></i>
   </button>
@@ -235,36 +272,37 @@
       });
     }
 
+    // Function to toggle Botpress chat
+    function toggleBotpressChat() {
+      // Check if Botpress webchat is already initialized and toggle its visibility
+      if (window.botpressWebChat) {
+        window.botpressWebChat.sendEvent({ type: 'toggle' });
+      }
+    }
+    
+    // Function to open modal
+    function openModal() {
+      document.getElementById('reportTypesModal').classList.add('open');
+    }
+    
+    // Function to close modal
+    function closeModal() {
+      document.getElementById('reportTypesModal').classList.remove('open');
+    }
+    
+    // Close modal when clicking outside of modal content
+    window.addEventListener('click', function(event) {
+      const modal = document.getElementById('reportTypesModal');
+      if (event.target === modal) {
+        closeModal();
+      }
+    });
+
     function renderTags(types) {
       const tagContainer = document.getElementById("tagContainer");
       tagContainer.innerHTML = "";
       
-      // Define descriptions for each report type
-      const reportDescriptions = {
-        "CRS": {
-          title: "Congressional Research Service",
-          description: "Reports created by the Congressional Research Service, a legislative branch agency within the Library of Congress. These reports provide detailed analysis and research on policy issues for members of Congress."
-        },
-        "AFR": {
-          title: "Agency Financial Report",
-          description: "Annual reports that provide financial and performance results for federal agencies. AFRs demonstrate accountability and stewardship of public funds, including audited financial statements and compliance information."
-        },
-        "PAR": {
-          title: "Performance and Accountability Report",
-          description: "Annual reports that combine financial and performance information to show how agencies are meeting their goals and using taxpayer dollars effectively."
-        },
-        "CJ": {
-          title: "Congressional Justification",
-          description: "Documents submitted to Congress that detail an agency's budget request. CJs explain how requested funds will be used, including program priorities and performance plans."
-        }
-      };
-      
       types.forEach(type => {
-        // Create a wrapper div to hold both the tag and the info icon
-        const tagGroup = document.createElement("div");
-        tagGroup.className = "tag-group";
-        
-        // Create the tag element
         const span = document.createElement("span");
         span.className = "tag";
         span.textContent = type;
@@ -272,30 +310,7 @@
           span.classList.toggle("active");
           renderReports();
         };
-        
-        // Create info icon with tooltip
-        const infoIcon = document.createElement("i");
-        infoIcon.className = "fas fa-info-circle info-icon";
-        
-        const reportInfo = reportDescriptions[type] || {
-          title: type,
-          description: "Government report type"
-        };
-        
-        // Add tooltip to info icon
-        const tooltip = document.createElement("div");
-        tooltip.className = "info-tooltip";
-        tooltip.innerHTML = `
-          <h4>${reportInfo.title}</h4>
-          <p>${reportInfo.description}</p>
-        `;
-        
-        infoIcon.appendChild(tooltip);
-        
-        // Add elements to the DOM
-        tagGroup.appendChild(span);
-        tagGroup.appendChild(infoIcon);
-        tagContainer.appendChild(tagGroup);
+        tagContainer.appendChild(span);
       });
     }
 
