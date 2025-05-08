@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Flag_of_the_United_States.svg/1200px-Flag_of_the_United_States.svg.png'); background-size: cover; background-repeat: no-repeat; background-attachment: fixed; background-position: center; opacity: 0.97;">
-  <div class="container">
+  <div class="container" id="top">
     <header>
       <h1><i class="fas fa-landmark"></i> Government Reports Dashboard</h1>
       <button class="chat-button"><i class="fas fa-comment-dots"></i> Chat with AI</button>
@@ -40,6 +40,10 @@
     <div class="tags" id="tagContainer"></div>
     <div id="reportList"></div>
   </div>
+  
+  <button id="backToTopBtn" class="back-to-top" aria-label="Back to top">
+    <i class="fas fa-arrow-up"></i>
+  </button>
 
   <script>
     async function loadCSVasDataFrame(url, reportType) {
@@ -118,6 +122,28 @@
       return selected.includes("__any__") ? [] : selected;
     }
 
+    // Function to ensure URLs are absolute (not relative to GitHub Pages)
+    function ensureAbsoluteURL(url) {
+      if (!url) return '';
+      
+      // Check if the URL already starts with http:// or https://
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url; // Already absolute, return as is
+      }
+      
+      // If URL is relative and starts with the GitHub Pages prefix, remove it
+      if (url.includes('max-maksutova.github.io/WebDemo/')) {
+        return url.replace('max-maksutova.github.io/WebDemo/', '');
+      }
+      
+      // If it's a relative URL without protocol, add https://
+      if (!url.startsWith('/') && !url.startsWith('http')) {
+        return 'https://' + url;
+      }
+      
+      return url;
+    }
+
     function renderReports() {
       const searchVal = document.getElementById("searchInput").value.toLowerCase();
       const selectedAgencies = getSelectedValues(document.getElementById("agencyFilter"));
@@ -183,11 +209,11 @@
         const badge = `<div class="badge ${reportTypeClass}">${row.reportType}</div>`;
         
         const pdfLink = row.pdf_url 
-          ? `<a href="${row.pdf_url}" target="_blank" class="btn"><i class="fas fa-file-pdf"></i> PDF Report</a>` 
+          ? `<a href="${cleanURL(row.pdf_url)}" target="_blank" class="btn"><i class="fas fa-file-pdf"></i> PDF Report</a>` 
           : "";
           
         const webLink = row.web_url 
-          ? `<a href="${row.web_url}" target="_blank" class="btn"><i class="fas fa-globe"></i> Web Page</a>` 
+          ? `<a href="${cleanURL(row.web_url)}" target="_blank" class="btn"><i class="fas fa-globe"></i> Web Page</a>` 
           : "";
           
         const links = pdfLink || webLink 
@@ -212,14 +238,54 @@
     function renderTags(types) {
       const tagContainer = document.getElementById("tagContainer");
       tagContainer.innerHTML = "";
+      
+      // Define descriptions for each report type
+      const reportDescriptions = {
+        "CRS": {
+          title: "Congressional Research Service",
+          description: "Reports created by the Congressional Research Service, a legislative branch agency within the Library of Congress. These reports provide detailed analysis and research on policy issues for members of Congress."
+        },
+        "AFR": {
+          title: "Agency Financial Report",
+          description: "Annual reports that provide financial and performance results for federal agencies. AFRs demonstrate accountability and stewardship of public funds, including audited financial statements and compliance information."
+        },
+        "PAR": {
+          title: "Performance and Accountability Report",
+          description: "Annual reports that combine financial and performance information to show how agencies are meeting their goals and using taxpayer dollars effectively."
+        },
+        "CJ": {
+          title: "Congressional Justification",
+          description: "Documents submitted to Congress that detail an agency's budget request. CJs explain how requested funds will be used, including program priorities and performance plans."
+        }
+      };
+      
       types.forEach(type => {
         const span = document.createElement("span");
         span.className = "tag";
-        span.textContent = type;
-        span.onclick = () => {
-          span.classList.toggle("active");
-          renderReports();
+        
+        const reportInfo = reportDescriptions[type] || {
+          title: type,
+          description: "Government report type"
         };
+        
+        // Create the tag with info icon
+        span.innerHTML = `
+          ${type}
+          <i class="fas fa-info-circle info-icon"></i>
+          <div class="info-tooltip">
+            <h4>${reportInfo.title}</h4>
+            <p>${reportInfo.description}</p>
+          </div>
+        `;
+        
+        span.onclick = (e) => {
+          // Only toggle active state if not clicking on info icon
+          if (!e.target.classList.contains('info-icon')) {
+            span.classList.toggle("active");
+            renderReports();
+          }
+        };
+        
         tagContainer.appendChild(span);
       });
     }
@@ -248,8 +314,14 @@
         const label = card.querySelector("strong")?.textContent || "";
         const date = card.querySelector("p:nth-of-type(3)")?.textContent || "";
         const type = card.querySelector(".badge")?.textContent || "";
-        const pdf = card.querySelector("a[href*='.pdf']")?.href || "";
-        const web = card.querySelector("a:not([href*='.pdf'])")?.href || "";
+        
+        // Clean URLs for export
+        let pdf = card.querySelector("a[href*='.pdf']")?.href || "";
+        let web = card.querySelector("a:not([href*='.pdf'])")?.href || "";
+        
+        if (pdf) pdf = cleanURL(pdf);
+        if (web) web = cleanURL(web);
+        
         csvContent.push(`"${title}","${summary}","${label}","${date}","${type}","${pdf}","${web}"`);
       });
       const blob = new Blob([csvContent.join("\n")], { type: "text/csv;charset=utf-8;" });
@@ -336,6 +408,26 @@
 
     // Initialize the application
     init();
+    
+    // Back to top button functionality
+    const backToTopBtn = document.getElementById("backToTopBtn");
+    
+    // Show or hide the button based on scroll position
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 300) {
+        backToTopBtn.classList.add("visible");
+      } else {
+        backToTopBtn.classList.remove("visible");
+      }
+    });
+    
+    // Scroll to top when clicked
+    backToTopBtn.addEventListener("click", () => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    });
   </script>
 </body>
 </html>
