@@ -260,33 +260,42 @@
       };
       
       types.forEach(type => {
+        // Create a wrapper div to hold both the tag and the info icon
+        const tagGroup = document.createElement("div");
+        tagGroup.className = "tag-group";
+        
+        // Create the tag element
         const span = document.createElement("span");
         span.className = "tag";
+        span.textContent = type;
+        span.onclick = () => {
+          span.classList.toggle("active");
+          renderReports();
+        };
+        
+        // Create info icon with tooltip
+        const infoIcon = document.createElement("i");
+        infoIcon.className = "fas fa-info-circle info-icon";
         
         const reportInfo = reportDescriptions[type] || {
           title: type,
           description: "Government report type"
         };
         
-        // Create the tag with info icon
-        span.innerHTML = `
-          ${type}
-          <i class="fas fa-info-circle info-icon"></i>
-          <div class="info-tooltip">
-            <h4>${reportInfo.title}</h4>
-            <p>${reportInfo.description}</p>
-          </div>
+        // Add tooltip to info icon
+        const tooltip = document.createElement("div");
+        tooltip.className = "info-tooltip";
+        tooltip.innerHTML = `
+          <h4>${reportInfo.title}</h4>
+          <p>${reportInfo.description}</p>
         `;
         
-        span.onclick = (e) => {
-          // Only toggle active state if not clicking on info icon
-          if (!e.target.classList.contains('info-icon')) {
-            span.classList.toggle("active");
-            renderReports();
-          }
-        };
+        infoIcon.appendChild(tooltip);
         
-        tagContainer.appendChild(span);
+        // Add elements to the DOM
+        tagGroup.appendChild(span);
+        tagGroup.appendChild(infoIcon);
+        tagContainer.appendChild(tagGroup);
       });
     }
 
